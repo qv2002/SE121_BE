@@ -1,17 +1,20 @@
-const Product = require("../models/product.model");
+const { Product, Order } = require("../models/product.model");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
 const ProductsController = {
   // [GET] /v1/products
   getAllProducts: async (req, res, next) => {
-    Product.find({})
-      .then((products) => res.json(products))
-      .catch(next);
+    try {
+      const allProduct = await Product.find();
+      res.status(200).json(allProduct);
+    } catch (error) {
+      res.status(500).json(error);
+    }
   },
 
   // [GET] /v1/products/:_id
-  getAnProduct: async (req, res) => {
+  getAProduct: async (req, res) => {
     try {
       const Anproduct = await Product.findById(req.params.id);
       res.status(200).json(Anproduct);
@@ -20,10 +23,10 @@ const ProductsController = {
     }
   },
 
-  // [POST] /v1/product/create?link=....
-  createProduct: async (req, res) => {
+  // crawl data
+  createProduct: async (link) => {
     try {
-      const baseUrl = "https://phongvu.vn/iphone-14-pro--p459616?sku=220908992";
+      let baseUrl = link;
       const response = await axios.get(baseUrl);
       if (baseUrl.split("/")[2] === "phongvu.vn") {
         const $ = cheerio.load(response.data);
@@ -64,7 +67,7 @@ const ProductsController = {
 
         const newProduct = new Product(productData);
         const savedProduct = await newProduct.save();
-        res.status(200).json(savedProduct);
+        return savedProduct;
       } else if (baseUrl.split("/")[2] === "hoanghamobile.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
@@ -87,7 +90,7 @@ const ProductsController = {
         };
         const newProduct = new Product(productData);
         const savedProduct = await newProduct.save();
-        res.status(200).json(savedProduct);
+        return savedProduct;
       }
     } catch (err) {
       res.status(500).json(err.message);
@@ -95,7 +98,7 @@ const ProductsController = {
   },
 
   // [PUT /v1/product/:_id
-  updateAnProduct: async (req, res) => {
+  updateAProduct: async (req, res) => {
     try {
       const product = await Product.findById(req.params.id);
       const baseUrl = product.link;
@@ -142,6 +145,17 @@ const ProductsController = {
       res.status(500).json(err.message);
     }
   },
+
+  // createOrder: async (req, res) => {
+  //   try {
+  //     const newOrder = new Order(req.body);
+  //     const saveOrder = await newOrder.save();
+  //     res.status(200).json(saveOrder);
+  //   } catch (err) {
+  //     res.status(500).json(err.message);
+  //   }
+  // },
+  //
 };
 
 module.exports = ProductsController;
