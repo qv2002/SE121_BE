@@ -51,7 +51,7 @@ const OrderController = {
       await Order.findByIdAndDelete(req.params.id);
       res.status(200).json("delete successfully");
     } catch (error) {
-      res.statsu(500).json(error);
+      res.status(500).json(error);
     }
   },
 };
