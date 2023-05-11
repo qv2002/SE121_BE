@@ -98,9 +98,10 @@ const ProductsController = {
   },
 
   // [PUT /v1/product/:_id
-  updateAProduct: async (req, res) => {
+  updateAProduct: async (id) => {
     try {
-      const product = await Product.findById(req.params.id);
+      // const product = await Product.findById(req.params.id);
+      const product = await Product.findById(id);
       const baseUrl = product.link;
       if (baseUrl.split("/")[2] === "phongvu.vn") {
         const response = await axios.get(baseUrl);
@@ -116,7 +117,7 @@ const ProductsController = {
           };
           product.prices.push(newPrice);
           await product.save();
-          res.status(200).json("update successfully");
+          return product;
         }
       } else if (baseUrl.split("/")[2] === "hoanghamobile.com") {
         const response = await axios.get(baseUrl);
@@ -129,7 +130,7 @@ const ProductsController = {
         };
         product.prices.push(newPrice);
         await product.save();
-        res.status(200).json("update successfully");
+        return product;
       }
     } catch (err) {
       res.status(500).json(err.message);
@@ -144,7 +145,20 @@ const ProductsController = {
     } catch (err) {
       res.status(500).json(err.message);
     }
-  },
+  }, 
+  updateEveryDay: async (req, res) => {
+    try {
+      const products = await Product.find();
+      for (let i = 0; i < products.length; i++) {
+        console.log(products[i].id);
+        const updateProduct = await ProductsController.updateAProduct(products[i].id);
+        console.log(updateProduct);
+      }
+      res.status(200).json("Update successfully");
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
 };
 
 module.exports = ProductsController;
