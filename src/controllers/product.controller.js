@@ -93,7 +93,7 @@ const ProductsController = {
         return savedProduct;
       }
     } catch (err) {
-      res.status(500).json(err.message);
+      throw new Error(err.message);
     }
   },
 
@@ -133,7 +133,7 @@ const ProductsController = {
         return product;
       }
     } catch (err) {
-      res.status(500).json(err.message);
+      throw new Error(err.message);
     }
   },
 
@@ -146,17 +146,28 @@ const ProductsController = {
       res.status(500).json(err.message);
     }
   }, 
-  updateEveryDay: async (req, res) => {
+  updateEveryDay: async () => {
     try {
+      let updateProduct;
       const products = await Product.find();
       for (let i = 0; i < products.length; i++) {
-        console.log(products[i].id);
-        const updateProduct = await ProductsController.updateAProduct(products[i].id);
+        updateProduct = await ProductsController.updateAProduct(products[i].id);
         console.log(updateProduct);
       }
-      res.status(200).json("Update successfully");
+      return updateProduct;
     } catch (err) {
-      res.status(500).json(err);
+      throw new Error(err.message);
+    }
+  },
+  setTimeCrawl: async (req, res) => {
+    try {
+      const i = 0;
+      setInterval(() => {
+        ProductsController.updateEveryDay();
+      }, 21.600);
+      res.status(200).json("Set time crawl successfully");
+    } catch (err) {
+      res.status(500).json(err.message);
     }
   }
 };
