@@ -17,6 +17,7 @@
     "got": "^12.6.0",
     "jsdom": "^21.1.1",
     "mongoose": "^7.0.4",
+    "node-cron": "^3.0.2",
     "node-schedule": "^2.1.1",
     "nodemon": "^2.0.22",
     "uuid": "^9.0.0"
