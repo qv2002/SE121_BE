@@ -4,20 +4,21 @@ const Schema = mongoose.Schema;
 const OrderSchema = new mongoose.Schema({
   gmail: {
     type: String,
+    require: true
   },
-  price: [
-    {
+  price: {
     min: {
       type: Number,
-      required: true
+      required: true,
     },
     max: {
       type: Number,
       required: true
     }
-  }],
+  },
   link: {
     type: String,
+    require: true
   },
   product: {
     type: mongoose.Types.ObjectId,

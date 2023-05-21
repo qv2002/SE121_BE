@@ -128,6 +128,7 @@ const ProductsController = {
       // const product = await Product.findById(req.params.id);
       const product = await Product.findById(id);
       const baseUrl = product.link;
+      let newPrice = {}
       if (baseUrl.split("/")[2] === "phongvu.vn") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
@@ -136,23 +137,17 @@ const ProductsController = {
         if (price !== "") {
           price = price.trim().split("₫")[0].replaceAll(".","");
           const date = new Date();
-          const newPrice = {
+          newPrice = {
             date,
             price: parseInt(price),
           };
-          product.prices.push(newPrice);
-          await product.save();
-          return product;
         } else {
           price = info.find(".css-1co26wt > div").text().trim().split("₫")[0].replaceAll(".","");
           const date = new Date();
-          const newPrice = {
+          newPrice = {
             date,
             price: parseInt(price),
           };
-          product.prices.push(newPrice);
-          await product.save();
-          return product;
         }
       }
       if (baseUrl.split("/")[2] === "gearvn.com") {
@@ -160,26 +155,27 @@ const ProductsController = {
         const $ = cheerio.load(response.data);
         const price = $(".product_sale_price").text().trim().split("₫")[0].replaceAll(",","");
         const date = new Date();
-        const newPrice = {
+        newPrice = {
           date,
           price: parseInt(price),
         };
-        product.prices.push(newPrice);
-        await product.save();
-        return product;
       } else if (baseUrl.split("/")[2] === "hoanghamobile.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
         const price = $(".product-center > p > strong").text().trim().split("₫")[0].replaceAll(",","");
         const date = new Date();
-        const newPrice = {
+        newPrice = {
           date,
           price: parseInt(price),
         };
+      }
+      if (Object.keys(newPrice).length !== 0) {
         product.prices.push(newPrice);
         await product.save();
-        return product;
+      } else {
+        console.log('empty object');
       }
+      return product;
     } catch (err) {
       throw new Error(err.message);
     }
@@ -196,12 +192,24 @@ const ProductsController = {
   }, 
 
   // Update price của từng sản phẩm có trong list
-  updateEveryDay: async () => {
+  updateEveryTime: async () => {
     try {
       let updateProduct;
-      const products = await Product.find();
-      for (let i = 0; i < products.length; i++) {
-        updateProduct = await ProductsController.updateAProduct(products[i].id);
+      const order = await Order.find().populate("product");
+      for (let i = 0; i < order.length; i++) {
+        const product = order[i].product;
+        updateProduct = await ProductsController.updateAProduct(product.id);
+        const updatedProduct = await Product.findById(product.id).populate("prices");
+        const updatePrice = updatedProduct.prices[updatedProduct.prices.length - 1].price;
+        console.log(`Update price: ${updatePrice}`);
+        let min = order[i].price.min;
+        let max = order[i].price.max;
+        if (updatePrice > min && updatePrice < max) {
+          console.log(`${min} < price: ${updatePrice} < ${max}`);
+          // mail and delete product
+        } else {
+          console.log(`price: ${updatePrice} min:${min} max:${max}`);
+        }
         console.log(updateProduct);
       }
       return updateProduct;
@@ -213,11 +221,7 @@ const ProductsController = {
   // [PUT] /v1/products/crawltime
   setTimeCrawl: async (req, res) => {
     try {
-      const i = 0;
-      setInterval(() => {
-        console.log(i + 1);
-        ProductsController.updateEveryDay();
-      }, 10000);
+      ProductsController.updateEveryTime();
       res.status(200).json("Set time crawl successfully");
     } catch (err) {
       res.status(500).json(err.message);
@@ -226,7 +230,7 @@ const ProductsController = {
   scheduleCrawl: async (req, res) => {
     try {
       cron.schedule("*/1 * * * *", function () {
-        ProductsController.updateEveryDay();
+        ProductsController.updateEveryTime();
       });
     } catch (error) {
       res.status(500).json(error.message)
