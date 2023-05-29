@@ -1,6 +1,8 @@
 const express = require("express");
 const schedule = require("node-schedule");
 const app = express();
+const path = require("path");
+const handlebars = require("express-handlebars")
 require("dotenv").config();
 
 const mongoose = require("mongoose");
@@ -11,7 +13,17 @@ const cron = require("node-cron");
 const productController = require("../src/controllers/product.controller");
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+
+//Template engine
+app.engine("handlebars", handlebars.engine());
+app.set("view engine", "handlebars");
+
+app.set("views", path.join(__dirname, "resources", "views"));
+app.get("/", (req, resp) => {
+  resp.render("mail");
+});
 
 const PORT = process.env.PORT || 8000;
 
@@ -58,6 +70,8 @@ route(app);
 // } catch (error) {
 //   console.log(error);
 // }
+
+
 
 app.listen(PORT, () => {
   console.log(`SERVER RUNNING AT ${PORT}`);

@@ -2,6 +2,7 @@ const { Product, Order } = require("../models/product.model");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const cron = require("node-cron");
+const sendEmail = require('../utils/mailer')
 
 const ProductsController = {
   // [GET] /v1/products
@@ -207,6 +208,17 @@ const ProductsController = {
         if (updatePrice > min && updatePrice < max) {
           console.log(`${min} < price: ${updatePrice} < ${max}`);
           // mail and delete product
+          //console.log(order[i].product.image);
+          await sendEmail({
+            reciverEmail: order[i].gmail,
+            product_name: order[i].product.name,
+            product_price: updatePrice,
+            link_image: order[i].product.image,
+            product_link: order[i].link
+          });
+          // delete product
+          await Product.findByIdAndDelete(order[i].product);
+          await Order.findByIdAndDelete(order[i].id);
         } else {
           console.log(`price: ${updatePrice} min:${min} max:${max}`);
         }
@@ -229,13 +241,12 @@ const ProductsController = {
   },
   scheduleCrawl: async (req, res) => {
     try {
-      cron.schedule("*/1 * * * *", function () {
-        ProductsController.updateEveryTime();
-      });
+      cron.schedule("*/1 * * * *", ProductsController.updateEveryTime);
     } catch (error) {
-      res.status(500).json(error.message)
+      res.status(500).json(error.message);
     }
-  }
+  },
+  
 };
 
 module.exports = ProductsController;

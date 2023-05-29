@@ -25,7 +25,7 @@ const OrderController = {
   createOrder: async (req, res) => {
     try {
       const { link, gmail, price } = req.body;
-
+      if (!link || !gmail || !price) throw new Error('Please provide link, gmail and price!')
       const createdProduct = await productController.createProduct(link);
 
       const newOrder = new Order({
