@@ -25,7 +25,10 @@ const OrderController = {
   createOrder: async (req, res) => {
     try {
       const { link, gmail, price } = req.body;
-      if (!link || !gmail || !price) throw new Error('Please provide link, gmail and price!')
+      if (!link || !gmail || !price ) throw new Error('Please provide link, gmail and price (min, max)!')
+      const baseUrl = link.split("/")[2];
+      //console.log(baseUrl);
+      if (baseUrl !== "phongvu.vn" && baseUrl !=="gearvn.com" && baseUrl !== "tiki.vn" && baseUrl !== "hoanghamobile.com") throw new Error('this link should be contain "phongvu.vn", "gearvn.com", "tiki.vn", "hoanghamobile.com"')
       const createdProduct = await productController.createProduct(link);
 
       const newOrder = new Order({
@@ -33,6 +36,7 @@ const OrderController = {
         price: price,
         link: link,
         product: createdProduct,
+        hasDone: false,
       });
 
       const savedOrder = await newOrder.save();

@@ -2,7 +2,7 @@ const { Product, Order } = require("../models/product.model");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const cron = require("node-cron");
-const sendEmail = require('../utils/mailer')
+const sendEmail = require("../utils/mailer");
 
 const ProductsController = {
   // [GET] /v1/products
@@ -45,14 +45,19 @@ const ProductsController = {
         const date = new Date();
         let price = info.find(".att-product-detail-latest-price").text();
         if (price !== "") {
-          price = price.trim().split("₫")[0].replaceAll(".","");
+          price = price.trim().split("₫")[0].replaceAll(".", "");
           const newPrice = {
             date,
             price: parseInt(price),
           };
           prices.push(newPrice);
         } else {
-          price = info.find(".css-1co26wt > div").text().trim().split("₫")[0].replaceAll(".","");
+          price = info
+            .find(".css-1co26wt > div")
+            .text()
+            .trim()
+            .split("₫")[0]
+            .replaceAll(".", "");
           const newPrice = {
             date,
             price: parseInt(price),
@@ -70,20 +75,24 @@ const ProductsController = {
         const newProduct = new Product(productData);
         const savedProduct = await newProduct.save();
         return savedProduct;
-      } 
-      if (baseUrl.split("/")[2] === "gearvn.com"){
+      }
+      if (baseUrl.split("/")[2] === "gearvn.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
         const prices = [];
         const name = $(".product_name").text().trim();
         const date = new Date();
-        const price = $(".product_sale_price").text().trim().split("₫")[0].replaceAll(",","");
+        const price = $(".product_sale_price")
+          .text()
+          .trim()
+          .split("₫")[0]
+          .replaceAll(",", "");
         const newPrice = {
           date,
           price: parseInt(price),
         };
         prices.push(newPrice);
-        const image = $(".fotorama > img").attr("src")
+        const image = $(".fotorama > img").attr("src");
         const link = baseUrl;
         const productData = {
           name,
@@ -94,13 +103,64 @@ const ProductsController = {
         const newProduct = new Product(productData);
         const savedProduct = await newProduct.save();
         return savedProduct;
+      } 
+      if (baseUrl.split("/"[2] === "tiki.vn")) {
+        const req = await axios.get(baseUrl);
+        const prices = []
+        const $ = cheerio.load(req.data);
+        const name = $('.header > .title').text();
+        let price = $('.product-price > .product-price__current-price')
+          .text()
+          .trim()
+          .split('₫')[0]
+          .replaceAll(".","");
+        if (!price) {
+            //console.log("sale");
+            price = $(".flash-sale-price")
+              .text()
+              .trim()
+              .split('₫')[0]
+              .replaceAll(".","");  
+            if (!price) {
+                //console.log("discount")
+                price = $(".styles__Price-sc-6hj7z9-1.jgbWJA")
+                  .text()
+                  .trim()
+                  .split('₫')[0]
+                  .replaceAll(".","");
+            }
+          }
+        const image = $('.group-images').find('img').attr('srcset').split(" ")[0]
+        const date = new Date();
+        //console.log(price); 
+        const newPrice = {
+          date,
+          price: parseInt(price),
+        };
+        prices.push(newPrice);
+        const link = baseUrl;
+        const productData = {
+          name,
+          prices,
+          image,
+          link,
+        };
+        const newProduct = new Product(productData);
+        const savedProduct = await newProduct.save();
+        return savedProduct;          
+
+
       } else if (baseUrl.split("/")[2] === "hoanghamobile.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
         const prices = [];
         const name = $(".top-product > h1").text().trim();
         const date = new Date();
-        const price = $(".product-center > p > strong").text().trim().split("₫")[0].replaceAll(",","");
+        const price = $(".product-center > p > strong")
+          .text()
+          .trim()
+          .split("₫")[0]
+          .replaceAll(",", "");
         const newPrice = {
           date,
           price: parseInt(price),
@@ -129,21 +189,26 @@ const ProductsController = {
       // const product = await Product.findById(req.params.id);
       const product = await Product.findById(id);
       const baseUrl = product.link;
-      let newPrice = {}
+      let newPrice = {};
       if (baseUrl.split("/")[2] === "phongvu.vn") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
         const info = $(".css-6b3ezu");
         let price = info.find(".att-product-detail-latest-price").text();
         if (price !== "") {
-          price = price.trim().split("₫")[0].replaceAll(".","");
+          price = price.trim().split("₫")[0].replaceAll(".", "");
           const date = new Date();
           newPrice = {
             date,
             price: parseInt(price),
           };
         } else {
-          price = info.find(".css-1co26wt > div").text().trim().split("₫")[0].replaceAll(".","");
+          price = info
+            .find(".css-1co26wt > div")
+            .text()
+            .trim()
+            .split("₫")[0]
+            .replaceAll(".", "");
           const date = new Date();
           newPrice = {
             date,
@@ -154,7 +219,41 @@ const ProductsController = {
       if (baseUrl.split("/")[2] === "gearvn.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
-        const price = $(".product_sale_price").text().trim().split("₫")[0].replaceAll(",","");
+        const price = $(".product_sale_price")
+          .text()
+          .trim()
+          .split("₫")[0]
+          .replaceAll(",", "");
+        const date = new Date();
+        newPrice = {
+          date,
+          price: parseInt(price),
+        };
+      }
+      if (baseUrl.split("/")[2] === "tiki.vn") {
+        const response = await axios.get(baseUrl);
+        const $ = cheerio.load(response.data);
+        let price = $('.product-price > .product-price__current-price')
+          .text()
+          .trim()
+          .split('₫')[0]
+          .replaceAll(".","");
+        if (!price) {
+            //console.log("sale");
+            price = $(".flash-sale-price")
+              .text()
+              .trim()
+              .split('₫')[0]
+              .replaceAll(".","");  
+            if (!price) {
+                //console.log("discount")
+                price = $(".styles__Price-sc-6hj7z9-1.jgbWJA")
+                  .text()
+                  .trim()
+                  .split('₫')[0]
+                  .replaceAll(".","");
+            }
+          }
         const date = new Date();
         newPrice = {
           date,
@@ -163,7 +262,11 @@ const ProductsController = {
       } else if (baseUrl.split("/")[2] === "hoanghamobile.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
-        const price = $(".product-center > p > strong").text().trim().split("₫")[0].replaceAll(",","");
+        const price = $(".product-center > p > strong")
+          .text()
+          .trim()
+          .split("₫")[0]
+          .replaceAll(",", "");
         const date = new Date();
         newPrice = {
           date,
@@ -174,7 +277,7 @@ const ProductsController = {
         product.prices.push(newPrice);
         await product.save();
       } else {
-        console.log('empty object');
+        console.log("empty object");
       }
       return product;
     } catch (err) {
@@ -185,12 +288,14 @@ const ProductsController = {
   // [DELETE] /v1/product/:id
   deleteProduct: async (req, res) => {
     try {
-      await Product.findByIdAndDelete(req.params.id);
+      const product = req.params.id;
+      await Product.findByIdAndDelete(product);
+      await Order.findByIdAndDelete(product.order)
       res.status(200).json("delete successfully");
     } catch (err) {
       res.status(500).json(err.message);
     }
-  }, 
+  },
 
   // Update price của từng sản phẩm có trong list
   updateEveryTime: async () => {
@@ -198,29 +303,38 @@ const ProductsController = {
       let updateProduct;
       const order = await Order.find().populate("product");
       for (let i = 0; i < order.length; i++) {
-        const product = order[i].product;
-        updateProduct = await ProductsController.updateAProduct(product.id);
-        const updatedProduct = await Product.findById(product.id).populate("prices");
-        const updatePrice = updatedProduct.prices[updatedProduct.prices.length - 1].price;
-        console.log(`Update price: ${updatePrice}`);
-        let min = order[i].price.min;
-        let max = order[i].price.max;
-        if (updatePrice > min && updatePrice < max) {
-          console.log(`${min} < price: ${updatePrice} < ${max}`);
-          // mail and delete product
-          //console.log(order[i].product.image);
-          await sendEmail({
-            reciverEmail: order[i].gmail,
-            product_name: order[i].product.name,
-            product_price: updatePrice,
-            link_image: order[i].product.image,
-            product_link: order[i].link
-          });
-          // delete product
-          await Product.findByIdAndDelete(order[i].product);
-          await Order.findByIdAndDelete(order[i].id);
-        } else {
-          console.log(`price: ${updatePrice} min:${min} max:${max}`);
+        if (!order[i].hasDone)
+        {
+          const product = order[i].product;
+          updateProduct = await ProductsController.updateAProduct(product.id);
+          const updatedProduct = await Product.findById(product.id).populate(
+            "prices"
+          );
+          const updatePrice =
+            updatedProduct.prices[updatedProduct.prices.length - 1].price;
+          console.log(`Update price: ${updatePrice}`);
+          let min = order[i].price.min;
+          let max = order[i].price.max;
+          if (updatePrice > min && updatePrice < max) {
+            console.log(`${min} < price: ${updatePrice} < ${max}`);
+            // mail and delete product
+            //console.log(order[i].product.image);
+            await sendEmail({
+              reciverEmail: order[i].gmail,
+              product_name: order[i].product.name,
+              product_price: updatePrice,
+              link_image: order[i].product.image,
+              product_link: order[i].link,
+            });
+            // delete product hasDone: true;
+            order[i].hasDone = true;
+            await order[i].save();
+          } else {
+            console.log(`price: ${updatePrice} min:${min} max:${max}`);
+          }
+        }
+        else {
+          updateProduct = "email sent";
         }
         console.log(updateProduct);
       }
@@ -229,7 +343,7 @@ const ProductsController = {
       throw new Error(err.message);
     }
   },
-  
+
   // [PUT] /v1/products/crawltime
   setTimeCrawl: async (req, res) => {
     try {
@@ -241,12 +355,13 @@ const ProductsController = {
   },
   scheduleCrawl: async (req, res) => {
     try {
-      cron.schedule("*/1 * * * *", ProductsController.updateEveryTime);
+      cron.schedule("3 0 * * *", function () {
+        ProductsController.updateEveryTime();
+      });
     } catch (error) {
       res.status(500).json(error.message);
     }
   },
-  
 };
 
 module.exports = ProductsController;

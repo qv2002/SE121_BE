@@ -20,7 +20,8 @@ const sendEmail = async (sendData) => {
       const source = fs.readFileSync(filePath, 'utf-8').toString();
       const template = handlebars.compile(source);
       const replacements = {
-        shop: "WEb SO SANH GIA SCALE",
+        shop: "Easee Buy",
+        logo_link: `src= "https://th.bing.com/th/id/OIP.yqePNBmRXIIJXv6OuoewKQHaGI?pid=ImgDet&rs=1}"`,
         name: `<strong>${sendData.reciverEmail.split("@")[0]}</strong>`,
         product_name: `<strong>${sendData.product_name}</strong>`,
         product_price: `<strong>${sendData.product_price}</strong>`,

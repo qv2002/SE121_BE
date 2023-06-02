@@ -20,6 +20,10 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     require: true
   },
+  hasDone: {
+    type: Boolean,
+    require: true,
+  },
   product: {
     type: mongoose.Types.ObjectId,
     ref: "Product",
