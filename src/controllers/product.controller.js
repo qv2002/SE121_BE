@@ -80,19 +80,19 @@ const ProductsController = {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
         const prices = [];
-        const name = $(".product_name").text().trim();
+        const name = $(".product-name").text().trim();
         const date = new Date();
-        const price = $(".product_sale_price")
+        const price = $(".pro-price")
           .text()
           .trim()
           .split("₫")[0]
-          .replaceAll(",", "");
+          .replaceAll(".", "");
         const newPrice = {
           date,
           price: parseInt(price),
         };
         prices.push(newPrice);
-        const image = $(".fotorama > img").attr("src");
+        const image =  `https:${$(".boxlazy-img--aspect > img").attr("src")}`;
         const link = baseUrl;
         const productData = {
           name,
@@ -219,11 +219,11 @@ const ProductsController = {
       if (baseUrl.split("/")[2] === "gearvn.com") {
         const response = await axios.get(baseUrl);
         const $ = cheerio.load(response.data);
-        const price = $(".product_sale_price")
+        const price = $(".pro-price")
           .text()
           .trim()
           .split("₫")[0]
-          .replaceAll(",", "");
+          .replaceAll(".", "");
         const date = new Date();
         newPrice = {
           date,
@@ -319,10 +319,18 @@ const ProductsController = {
             console.log(`${min} < price: ${updatePrice} < ${max}`);
             // mail and delete product
             //console.log(order[i].product.image);
+            const options = { 
+              style: 'currency',
+              currency: 'VND',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }
+            const formattedPrice = updatePrice.toLocaleString('vi-VN', options);
+
             await sendEmail({
               reciverEmail: order[i].gmail,
               product_name: order[i].product.name,
-              product_price: updatePrice,
+              product_price: formattedPrice,
               link_image: order[i].product.image,
               product_link: order[i].link,
             });
